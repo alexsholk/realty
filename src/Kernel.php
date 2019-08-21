@@ -50,4 +50,24 @@ class Kernel extends BaseKernel
         $routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
         $routes->import($confDir.'/{routes}'.self::CONFIG_EXTS, '/', 'glob');
     }
+
+    /**
+     * Ability to override cache dir by .env
+     *
+     * @return string
+     */
+    public function getCacheDir()
+    {
+        return $_ENV['CACHE_DIR'] ?? parent::getCacheDir();
+    }
+
+    /**
+     * Ability to override log dir by .env
+     *
+     * @return string
+     */
+    public function getLogDir()
+    {
+        return $_ENV['LOG_DIR'] ?? parent::getLogDir();
+    }
 }
