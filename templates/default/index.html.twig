@@ -1,7 +1,37 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-
-<h1>Random number: {{ n }}</h1>
-
+    <form action="{{ path('index') }}" method="get">
+        <table>
+            <thead>
+            <tr>
+                <td colspan="2">Geo rectangle area/diagonal by 2 points:</td>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td><label>X lat<input name="x_lat" value="{{ x_lat ?? 53.70158461260564 }}"></label></td>
+                <td><label>X long<input name="x_long" value="{{ x_long ?? 27.235107421875004 }}"></label></td>
+            </tr>
+            <tr>
+                <td><label>Y lat<input name="y_lat" value="{{ y_lat ?? 54.093630810050485 }}"></label></td>
+                <td><label>Y long<input name="y_long" value="{{ y_long ?? 27.888793945312504 }}"></label></td>
+            </tr>
+            <tr>
+                <td colspan="2"><label>Area<input readonly value="{{ area ?? '' }}">km<sup>2</sup></label></td>
+            </tr>
+            <tr>
+                <td colspan="2"><label>Diagonal<input readonly value="{{ distance ?? '' }}">km</label></td>
+            </tr>
+            <tr>
+                <td colspan="2"><label>Width<input readonly value="{{ width ?? '' }}">km</label></td>
+            </tr>
+            <tr>
+                <td colspan="2"><label>Height<input readonly value="{{ height ?? '' }}">km</label></td>
+            </tr>
+            </tbody>
+        </table>
+        <button type="submit">Calculate</button>
+        <a href="{{ path('index') }}">Reset to defaults</a>
+    </form>
 {% endblock %}
