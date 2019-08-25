@@ -31,7 +31,7 @@ class ScrapeCommand extends Command
         $scraperName = $input->getArgument('scraper');
         switch ($scraperName) {
             case 'onliner':
-                (new OnlinerScraper($this->projectDir . '/data'))->scrape();
+                (new OnlinerScraper($this->projectDir . '/data'))->scrapeTessellate();
                 break;
             default:
                 throw new \Exception('Unknown scraper ' . $scraperName);

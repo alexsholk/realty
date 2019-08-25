@@ -6,20 +6,15 @@ use GuzzleHttp\Client;
 
 class OnlinerScraper
 {
+    protected static $counter = 0;
+
     protected $scrapeDirectory;
+    protected $client;
 
     public function __construct($scrapeDirectory)
     {
         $this->scrapeDirectory = $scrapeDirectory;
-    }
-
-    public function scrape()
-    {
-        $scrapeDate = date('Ymd_His');
-        $path = $this->scrapeDirectory . '/onliner_a/' . $scrapeDate;
-        mkdir($path, 0755, true);
-
-        $client = new Client([
+        $this->client = new Client([
             'base_uri' => 'https://ak.api.onliner.by/',
             'headers' => [
                 'Accept' => 'application/json, text/plain, */*',
@@ -28,24 +23,32 @@ class OnlinerScraper
                 'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
             ]
         ]);
+    }
+
+    public function scrape()
+    {
+        $scrapeDate = date('Ymd_His');
+        $path = $this->scrapeDirectory . '/onliner_a/' . $scrapeDate;
+        mkdir($path, 0755, true);
 
         $query = [
-            // Minsk
-//            'bounds' => [
+            'bounds' => [
+                // Minsk
 //                'lb' => ['lat' => 53.70158461260564, 'long' => 27.235107421875004],
 //                'rt' => ['lat' => 54.093630810050485, 'long' => 27.888793945312504],
-//            ],
-            // Centre
-            'bounds' => [
-                'lb' => ['lat' => 53.882841598548, 'long' => 27.52055614142163],
-                'rt' => ['lat' => 53.92549729493005, 'long' => 27.591689537821342],
+                // Centre
+//                'lb' => ['lat' => 53.882841598548, 'long' => 27.52055614142163],
+//                'rt' => ['lat' => 53.92549729493005, 'long' => 27.591689537821342],
+                // No limits
+                'lb' => ['lat' => -90, 'long' => -180],
+                'rt' => ['lat' => 90, 'long' => 180],
             ],
             'page' => 1,
         ];
 
         file_put_contents($path . '/query.json', \GuzzleHttp\json_encode($query, JSON_PRETTY_PRINT));
         do {
-            $response = $client->request('GET', 'search/apartments', [
+            $response = $this->client->request('GET', 'search/apartments', [
                 'query' => $query,
             ]);
 
@@ -65,5 +68,113 @@ class OnlinerScraper
             $response->getStatusCode() == 200
             && $query['page'] <= $data['page']['last'] ?? null
         );
+    }
+
+    public function scrapeTessellate()
+    {
+        $scrapeDate = date('Ymd_His');
+        $path = $this->scrapeDirectory . '/onliner_tess/' . $scrapeDate;
+        mkdir($path, 0755, true);
+
+        // Initial bounds
+        $bounds = [
+            // All world
+//            'lb' => ['lat' => -90, 'long' => -180],
+//            'rt' => ['lat' => 90, 'long' => 180],
+            //
+            'lb' => ['lat' => 53.70158461260564, 'long' => 27.235107421875004],
+            'rt' => ['lat' => 54.093630810050485, 'long' => 27.888793945312504],
+        ];
+
+        $i = 0;
+        $apartments = $this->scrapeArea($bounds['lb'], $bounds['rt'], $path);
+        $data = [
+            'total' => count($apartments),
+            'apartments' => $apartments,
+        ];
+        file_put_contents($path . '/apartments.json', \GuzzleHttp\json_encode($data, JSON_PRETTY_PRINT));
+    }
+
+    protected function splitBounds($lb, $rt, int $horiz = 2, int $vert = 2)
+    {
+        $height = abs($rt['lat'] - $lb['lat']) / $vert;
+        $width  = abs($rt['long'] - $lb['long']) / $horiz;
+
+        $bounds = [];
+        for ($i = 0; $i < $vert; $i++) {
+            for ($j = 0; $j < $horiz; $j++) {
+                $bounds[] = [
+                    'lb' => [
+                        'lat' => $lb['lat'] + $height * $i,
+                        'long' => $lb['long'] + $width * $j
+                    ],
+                    'rt' => [
+                        'lat' => $lb['lat'] + $height * ($i + 1),
+                        'long' => $lb['long'] + $width * ($j + 1),
+                    ],
+                ];
+            }
+        }
+//
+//        dump([$lb]);
+//        dump([$rt]);
+//        dump($bounds);
+//        echo "-----------------------\n";
+        return $bounds;
+    }
+
+    protected function scrapeArea($lb, $rt, $path)
+    {
+        $apartments = [];
+
+        $query = [
+            'bounds' => ['lb' => $lb, 'rt' => $rt],
+            'page' => 1,
+        ];
+
+        $data = $this->request($query);
+
+        $datac = ['lb' => $lb, 'rt' => $rt] + $data;
+
+        $mt= self::$counter++;
+        file_put_contents($path . "/datalog_$mt.json", \GuzzleHttp\json_encode($datac, JSON_PRETTY_PRINT));
+
+        $can_parse_all = $data['total'] <= $data['page']['limit'] * $data['page']['last'];
+        if (!$can_parse_all) {
+            foreach ($this->splitBounds($lb, $rt) as $bound) {
+                $apartments = array_merge($apartments, $this->scrapeArea($bound['lb'], $bound['rt'], $path));
+            };
+            return $apartments;
+        }
+
+        $apartments = $data['apartments'];
+        for ($i = 2; $i <= $data['page']['last']; $i++) {
+            $query['page']++;
+            $data = $this->request($query);
+            $apartments = array_merge($apartments, $data['apartments']);
+        }
+
+        return $apartments;
+    }
+
+    protected function request($query)
+    {
+        try {
+            $response = $this->client->request('GET', 'search/apartments', [
+                'query' => $query,
+            ]);
+        } catch (\Exception $exception) {
+            dump($query);
+            dump($response ?? null);
+            throw $exception;
+        }
+
+        if ($response->getStatusCode() != 200) {
+            dump($response->getHeaders());
+            dump($response->getReasonPhrase());
+            die;
+        }
+
+        return \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
     }
 }
