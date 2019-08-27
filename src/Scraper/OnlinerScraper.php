@@ -76,18 +76,15 @@ class OnlinerScraper
         $path = $this->scrapeDirectory . '/onliner_tess/' . $scrapeDate;
         mkdir($path, 0755, true);
 
-        // Initial bounds
-        $bounds = [
-            // All world
-//            'lb' => ['lat' => -90, 'long' => -180],
-//            'rt' => ['lat' => 90, 'long' => 180],
-            //
-            'lb' => ['lat' => 53.70158461260564, 'long' => 27.235107421875004],
-            'rt' => ['lat' => 54.093630810050485, 'long' => 27.888793945312504],
-        ];
 
-        $i = 0;
-        $apartments = $this->scrapeArea($bounds['lb'], $bounds['rt'], $path);
+        // All world
+        $bounds_array = $this->getBoundsTessellation2();
+
+        $apartments = [];
+        foreach ($bounds_array as $bounds) {
+            $apartments = array_merge($apartments, $this->scrapeArea($bounds['lb'], $bounds['rt'], $path));
+        }
+
         $data = [
             'total' => count($apartments),
             'apartments' => $apartments,
@@ -98,7 +95,7 @@ class OnlinerScraper
     protected function splitBounds($lb, $rt, int $horiz = 2, int $vert = 2)
     {
         $height = abs($rt['lat'] - $lb['lat']) / $vert;
-        $width  = abs($rt['long'] - $lb['long']) / $horiz;
+        $width = abs($rt['long'] - $lb['long']) / $horiz;
 
         $bounds = [];
         for ($i = 0; $i < $vert; $i++) {
@@ -136,7 +133,7 @@ class OnlinerScraper
 
         $datac = ['lb' => $lb, 'rt' => $rt] + $data;
 
-        $mt= self::$counter++;
+        $mt = self::$counter++;
         file_put_contents($path . "/datalog_$mt.json", \GuzzleHttp\json_encode($datac, JSON_PRETTY_PRINT));
 
         $can_parse_all = $data['total'] <= $data['page']['limit'] * $data['page']['last'];
@@ -159,6 +156,8 @@ class OnlinerScraper
 
     protected function request($query)
     {
+        $query['v'] = $this->JsMathRandomEquivalent();
+
         try {
             $response = $this->client->request('GET', 'search/apartments', [
                 'query' => $query,
@@ -176,5 +175,69 @@ class OnlinerScraper
         }
 
         return \GuzzleHttp\json_decode($response->getBody()->getContents(), true);
+    }
+
+    protected function getBoundsAllWorld()
+    {
+        return [
+            [
+                'lb' => ['lat' => -90, 'long' => -180],
+                'rt' => ['lat' => 90, 'long' => 180],
+            ]
+        ];
+    }
+
+    protected function getBoundsTessellation1()
+    {
+        $bounds_array[] = [
+            'lb' => ['lat' => -90.0, 'long' => -180.0],
+            'rt' => ['lat' => 54.093630810050485, 'long' => 27.235107421875004],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => 54.093630810050485, 'long' => -180.0],
+            'rt' => ['lat' => 90.0, 'long' => 27.888793945312504],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => 53.70158461260564, 'long' => 27.888793945312504],
+            'rt' => ['lat' => 90.0, 'long' => 180.0],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => -90, 'long' => 27.235107421875004],
+            'rt' => ['lat' => 53.70158461260564, 'long' => 180.0],
+        ];
+        $bounds_array[] = [
+            // Minsk
+            'lb' => ['lat' => 53.70158461260564, 'long' => 27.235107421875004],
+            'rt' => ['lat' => 54.093630810050485, 'long' => 27.888793945312504],
+        ];
+        return $bounds_array;
+    }
+
+    protected function getBoundsTessellation2()
+    {
+        // Split world in 4 pieces by (approximately) center of Minsk
+        $bounds_array = [];
+        $bounds_array[] = [
+            'lb' => ['lat' => -90.0, 'long' => -180.0],
+            'rt' => ['lat' => 53.897607711328064, 'long' => 27.561950683593754],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => 53.897607711328064, 'long' => -180.0],
+            'rt' => ['lat' => 90.0, 'long' => 27.561950683593754],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => 53.897607711328064, 'long' => 27.561950683593754],
+            'rt' => ['lat' => 90.0, 'long' => 180.0],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => -90, 'long' => 27.561950683593754],
+            'rt' => ['lat' => 53.897607711328064, 'long' => 180.0],
+        ];
+        return $bounds_array;
+    }
+
+    protected function JsMathRandomEquivalent()
+    {
+        return (float)rand() / (float)getrandmax();
     }
 }
