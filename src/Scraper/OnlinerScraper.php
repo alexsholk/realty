@@ -78,7 +78,7 @@ class OnlinerScraper
 
 
         // All world
-        $bounds_array = $this->getBoundsTessellation2();
+        $bounds_array = $this->getBoundsTessellationUniform();
 
         $apartments = [];
         foreach ($bounds_array as $bounds) {
@@ -135,6 +135,7 @@ class OnlinerScraper
 
         $mt = self::$counter++;
         file_put_contents($path . "/datalog_$mt.json", \GuzzleHttp\json_encode($datac, JSON_PRETTY_PRINT));
+        // return []; use for test mode!
 
         $can_parse_all = $data['total'] <= $data['page']['limit'] * $data['page']['last'];
         if (!$can_parse_all) {
@@ -238,6 +239,70 @@ class OnlinerScraper
             'lb' => ['lat' => -90, 'long' => $center['long']],
             'rt' => ['lat' => $center['lat'], 'long' => 180.0],
         ];
+        return $bounds_array;
+    }
+
+    protected function getBoundsTessellation3()
+    {
+        $point_lat = 53.9104; // value that bottom and top pieces of world have near equal count of flats
+
+        // Split world in 2 pieces by horizontal
+        $bounds_array = [];
+        $bounds_array[] = [
+            'lb' => ['lat' => -90.0, 'long' => -180.0],
+            'rt' => ['lat' => $point_lat, 'long' => 180.0],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => $point_lat, 'long' => -180.0],
+            'rt' => ['lat' => 90.0, 'long' => 180.0],
+        ];
+        return $bounds_array;
+    }
+
+    protected function getBoundsTessellation4()
+    {
+        // Tessellate top piece of the world
+        // Смолячкова 7 (Краснозвездная 9)
+        $point_lat = 53.9104; // --- must be equal \/
+        $point_long = 27.5845;
+
+        // Split world in 2 pieces by horizontal
+        $bounds_array = [];
+        $bounds_array[] = [
+            'lb' => ['lat' => $point_lat, 'long' => -180.0],
+            'rt' => ['lat' => 90.0, 'long' => $point_long],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => $point_lat, 'long' => $point_long],
+            'rt' => ['lat' => 90.0, 'long' => 180.0],
+        ];
+        return $bounds_array;
+    }
+
+    protected function getBoundsTessellation5()
+    {
+        // Tessellate bottom piece of the world
+        // Аллея Праведников мира
+        $point_lat = 53.9104; // --- must be equal ^^^
+        $point_long = 27.5420;
+
+        // Split world in 2 pieces by horizontal
+        $bounds_array = [];
+        $bounds_array[] = [
+            'lb' => ['lat' => -90.0, 'long' => -180.0],
+            'rt' => ['lat' => $point_lat, 'long' => $point_long],
+        ];
+        $bounds_array[] = [
+            'lb' => ['lat' => -90.0, 'long' => $point_long],
+            'rt' => ['lat' => $point_lat, 'long' => 180.0],
+        ];
+        return $bounds_array;
+    }
+
+    protected function getBoundsTessellationUniform()
+    {
+        // Split world in 4 piece with approximately equal count of flats
+        $bounds_array = array_merge($this->getBoundsTessellation4(), $this->getBoundsTessellation5());
         return $bounds_array;
     }
 
