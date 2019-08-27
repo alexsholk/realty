@@ -215,23 +215,28 @@ class OnlinerScraper
 
     protected function getBoundsTessellation2()
     {
+        $center = [
+            'lat' => 53.897607711328064,
+            'long' => 27.561950683593754,
+        ];
+
         // Split world in 4 pieces by (approximately) center of Minsk
         $bounds_array = [];
         $bounds_array[] = [
             'lb' => ['lat' => -90.0, 'long' => -180.0],
-            'rt' => ['lat' => 53.897607711328064, 'long' => 27.561950683593754],
+            'rt' => ['lat' => $center['lat'], 'long' => $center['long']],
         ];
         $bounds_array[] = [
-            'lb' => ['lat' => 53.897607711328064, 'long' => -180.0],
-            'rt' => ['lat' => 90.0, 'long' => 27.561950683593754],
+            'lb' => ['lat' => $center['lat'], 'long' => -180.0],
+            'rt' => ['lat' => 90.0, 'long' => $center['long']],
         ];
         $bounds_array[] = [
-            'lb' => ['lat' => 53.897607711328064, 'long' => 27.561950683593754],
+            'lb' => ['lat' => $center['lat'], 'long' => $center['long']],
             'rt' => ['lat' => 90.0, 'long' => 180.0],
         ];
         $bounds_array[] = [
-            'lb' => ['lat' => -90, 'long' => 27.561950683593754],
-            'rt' => ['lat' => 53.897607711328064, 'long' => 180.0],
+            'lb' => ['lat' => -90, 'long' => $center['long']],
+            'rt' => ['lat' => $center['lat'], 'long' => 180.0],
         ];
         return $bounds_array;
     }
