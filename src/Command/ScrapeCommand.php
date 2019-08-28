@@ -3,21 +3,23 @@
 namespace App\Command;
 
 use App\Scraper\OnlinerScraper;
+use App\Scraper\ScraperCollection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ScrapeCommand extends Command
 {
     protected static $defaultName = 'realty:scrape';
 
-    protected $projectDir;
+    private $scraperCollection;
 
-    public function __construct($projectDir)
+    public function __construct(ScraperCollection $scraperCollection, string $name = null)
     {
-        $this->projectDir = $projectDir;
-        parent::__construct();
+        parent::__construct($name);
+        $this->scraperCollection = $scraperCollection;
     }
 
     protected function configure()
@@ -28,13 +30,8 @@ class ScrapeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $scraperName = $input->getArgument('scraper');
-        switch ($scraperName) {
-            case 'onliner':
-                (new OnlinerScraper($this->projectDir . '/data'))->scrapeTessellate();
-                break;
-            default:
-                throw new \Exception('Unknown scraper ' . $scraperName);
-        }
+        $scraper = $this->scraperCollection->get($input->getArgument('scraper'));
+
+        $scraper->scrape();
     }
 }

@@ -3,17 +3,28 @@
 namespace App\Scraper;
 
 use GuzzleHttp\Client;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class OnlinerScraper extends AbstractScraper
 {
+    protected $dispatcher;
+
     protected static $counter = 0;
 
     protected $scrapeDirectory;
     protected $client;
 
-    public function __construct($scrapeDirectory)
+    public static function getDefaultIndexName(): string
     {
-        $this->scrapeDirectory = $scrapeDirectory;
+        return 'onliner';
+    }
+
+    public function __construct(EventDispatcherInterface $dispatcher)
+    {
+        $this->dispatcher = $dispatcher;
+
+//        $scrapeDirectory =
+//        $this->scrapeDirectory = $scrapeDirectory;
         $this->client = new Client([
             'base_uri' => 'https://ak.api.onliner.by/',
             'headers' => [
@@ -27,6 +38,9 @@ class OnlinerScraper extends AbstractScraper
 
     public function scrape()
     {
+        die('scrape launched!');
+
+        return;
         $scrapeDate = date('Ymd_His');
         $path = $this->scrapeDirectory . '/onliner_a/' . $scrapeDate;
         mkdir($path, 0755, true);
