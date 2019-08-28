@@ -7,9 +7,13 @@ use Location\Distance\Vincenty;
 use Location\Polygon;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
 
 class DefaultController extends AbstractController
 {
+    /**
+     * @Route("/", name="index")
+     */
     public function index(Request $request)
     {
         $x_lat  = $request->get('x_lat', 53.70158461260564);
