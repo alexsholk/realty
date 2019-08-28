@@ -4,7 +4,7 @@ namespace App\Scraper;
 
 use GuzzleHttp\Client;
 
-class OnlinerScraper
+class OnlinerScraper extends AbstractScraper
 {
     protected static $counter = 0;
 
