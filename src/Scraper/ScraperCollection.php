@@ -4,31 +4,21 @@ namespace App\Scraper;
 
 class ScraperCollection
 {
-    private $scrapers;
+    private $scrapers = [];
 
     public function __construct(iterable $scrapers)
     {
-
-        foreach ($scrapers as $key => $scraper) {
-
-            dump($key);
-            die(';---');
-
-            $this->scrapers[$scraper->getName()] = $scraper;
-        }
+        $this->scrapers = $scrapers;
     }
 
-    /**
-     * @param string $name
-     * @return AbstractScraper
-     * @throws \Exception
-     */
-    public function get(string $name): AbstractScraper
+    public function get($name)
     {
-        if (!isset($this->scrapers[$name])) {
-            throw new \Exception("Scraper not defined ($name).");
+        foreach ($this->scrapers as $scraper) {
+            if ($scraper->getName() === $name) {
+                return $scraper;
+            }
         }
 
-        return $this->scrapers[$name];
+        throw new \Exception("Scraper not defined ($name).");
     }
 }

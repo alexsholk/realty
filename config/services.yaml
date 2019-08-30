@@ -11,8 +11,8 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         public: false
-#        bind:
-#            $projectDir: '%kernel.project_dir%'
+        bind:
+            $projectDir: '%kernel.project_dir%'
 
     # this config only applies to the services created by this file
     _instanceof:
@@ -28,17 +28,17 @@ services:
 
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
-#    App\Controller\:
-#        resource: '../src/Controller'
-#        tags: ['controller.service_arguments']
+    App\Controller\:
+        resource: '../src/Controller'
+        tags: ['controller.service_arguments']
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
-    App\Command\:
-        resource: '../src/Command'
-
     App\Scraper\:
         resource: '../src/Scraper'
 
     App\Scraper\ScraperCollection:
-        arguments: [!tagged { tag: 'realty.scraper' }]
+        arguments: [!tagged realty.scraper]
+
+    App\Command\:
+        resource: '../src/Command'

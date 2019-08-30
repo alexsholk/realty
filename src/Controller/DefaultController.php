@@ -5,6 +5,7 @@ namespace App\Controller;
 use Location\Coordinate;
 use Location\Distance\Vincenty;
 use Location\Polygon;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
@@ -14,7 +15,7 @@ class DefaultController extends AbstractController
     /**
      * @Route("/", name="index")
      */
-    public function index(Request $request)
+    public function index(Request $request, LoggerInterface $logger)
     {
         $x_lat  = $request->get('x_lat', 53.70158461260564);
         $x_long = $request->get('x_long', 27.235107421875004);
