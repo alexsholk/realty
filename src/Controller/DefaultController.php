@@ -50,4 +50,13 @@ class DefaultController extends AbstractController
             'width' => $width,
         ]);
     }
+
+    /**
+     * @Route("/phpinfo/{what}", name="phpinfo")
+     */
+    public function phpinfo($what = INFO_ALL)
+    {
+        \phpinfo($what);
+        die;
+    }
 }
