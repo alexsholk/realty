@@ -4,29 +4,46 @@ namespace App\Scraper;
 
 use GuzzleHttp\Client;
 
-class OnlinerScraper extends AbstractScraper
+class OnlinerScraper implements ScraperInterface
 {
-    protected static $counter = 0;
+    const BASE_URI = 'https://ak.api.onliner.by/';
 
-    protected $scrapeDirectory;
+    /** @var Client */
     protected $client;
 
-    public function __construct($scrapeDirectory)
+    // Default settings
+    protected $params = [
+        'areas' => [
+            ['lb' => ['lat' => 53.9104, 'long' => -180],    'rt' => ['lat' => 90.0,    'long' => 27.5845]],
+            ['lb' => ['lat' => 53.9104, 'long' => 27.5845], 'rt' => ['lat' => 90.0,    'long' => 180.0]],
+            ['lb' => ['lat' => -90.0,   'long' => -180.0],  'rt' => ['lat' => 53.9104, 'long' => 27.5420]],
+            ['lb' => ['lat' => -90.0,   'long' => 27.5420], 'rt' => ['lat' => 53.9104, 'long' => 180.0]],
+        ],
+        'tessellate' => true,
+        'since_time' => false,
+    ];
+
+    public function __construct(array $params = [])
     {
-        $this->scrapeDirectory = $scrapeDirectory;
-        $this->client = new Client([
-            'base_uri' => 'https://ak.api.onliner.by/',
-            'headers' => [
-                'Accept' => 'application/json, text/plain, */*',
-                'Referrer' => 'https://r.onliner.by/pk/',
-                'Sec-Fetch-Mode' => 'cors',
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
-            ]
-        ]);
+        $this->params = array_merge($this->params, $params);
+    }
+
+    public function getUid(): string
+    {
+        return 'onliner';
     }
 
     public function scrape()
     {
+        $result = [];
+
+        foreach ($this->params['areas'] as $area) {
+            $data = $this->scrapeArea($area['lb'], $area['rt']);
+        }
+
+        return $result;
+
+
         $scrapeDate = date('Ymd_His');
         $path = $this->scrapeDirectory . '/onliner_a/' . $scrapeDate;
         mkdir($path, 0755, true);
@@ -69,6 +86,23 @@ class OnlinerScraper extends AbstractScraper
             && $query['page'] <= $data['page']['last'] ?? null
         );
     }
+
+    /**
+     * @param $lb - Left top corner
+     * @param $rt - Right top corner
+     * @param $page
+     * @throws \Exception
+     */
+    protected function scrapeArea($lb, $rt, $page = 1)
+    {
+        $query = [
+            'bounds' => ['lb' => $lb, 'rt' => $rt],
+            'page'   => $page,
+            'v'      => (float)rand() / (float)getrandmax(),
+        ];
+    }
+
+
 
     public function scrapeTessellate()
     {
@@ -309,5 +343,18 @@ class OnlinerScraper extends AbstractScraper
     protected function JsMathRandomEquivalent()
     {
         return (float)rand() / (float)getrandmax();
+    }
+
+    protected function getHttpClient()
+    {
+        return $this->client ?: $this->client = new Client([
+            'base_uri' => self::BASE_URI,
+            'headers' => [
+                'Accept' => 'application/json, text/plain, */*',
+                'Referrer' => 'https://r.onliner.by/pk/',
+                'Sec-Fetch-Mode' => 'cors',
+                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36',
+            ]
+        ]);
     }
 }

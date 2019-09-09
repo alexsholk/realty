@@ -12,14 +12,6 @@ class ScrapeCommand extends Command
 {
     protected static $defaultName = 'realty:scrape';
 
-    protected $projectDir;
-
-    public function __construct($projectDir)
-    {
-        $this->projectDir = $projectDir;
-        parent::__construct();
-    }
-
     protected function configure()
     {
         $this->setDescription('Scrape realty websites');
@@ -31,10 +23,18 @@ class ScrapeCommand extends Command
         $scraperName = $input->getArgument('scraper');
         switch ($scraperName) {
             case 'onliner':
-                (new OnlinerScraper($this->projectDir . '/data'))->scrapeTessellate();
+                $scraper = new OnlinerScraper();
                 break;
             default:
                 throw new \Exception('Unknown scraper ' . $scraperName);
         }
+
+        $result = $scraper->scrape();
+
+        $path = __DIR__ . '/../../data/onliner/';
+        $filename = date('Ymd_His') . '.json';
+
+        mkdir($path, 0755, true);
+        file_put_contents($path . $filename, json_encode($result, JSON_PRETTY_PRINT));
     }
 }
