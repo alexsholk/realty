@@ -87,20 +87,20 @@ class OnlinerScraper implements ScraperInterface
         );
     }
 
-    /**
-     * @param $lb - Left top corner
-     * @param $rt - Right top corner
-     * @param $page
-     * @throws \Exception
-     */
-    protected function scrapeArea($lb, $rt, $page = 1)
-    {
-        $query = [
-            'bounds' => ['lb' => $lb, 'rt' => $rt],
-            'page'   => $page,
-            'v'      => (float)rand() / (float)getrandmax(),
-        ];
-    }
+//    /**
+//     * @param $lb - Left top corner
+//     * @param $rt - Right top corner
+//     * @param $page
+//     * @throws \Exception
+//     */
+//    protected function scrapeArea($lb, $rt, $page = 1)
+//    {
+//        $query = [
+//            'bounds' => ['lb' => $lb, 'rt' => $rt],
+//            'page'   => $page,
+//            'v'      => (float)rand() / (float)getrandmax(),
+//        ];
+//    }
 
 
 

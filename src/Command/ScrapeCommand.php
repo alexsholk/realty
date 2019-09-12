@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Scraper\Onliner\Rent\ItemScraper;
 use App\Scraper\OnlinerScraper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,6 +21,11 @@ class ScrapeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $is = new ItemScraper();
+
+        dump($is->getUid());
+        die;
+
         $scraperName = $input->getArgument('scraper');
         switch ($scraperName) {
             case 'onliner':
